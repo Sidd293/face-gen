@@ -7,6 +7,11 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src = "https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"></script>
     <style>
+   .text-blue-300 {
+    color: #4299e1; /* This is a shade of blue in Tailwind CSS */
+    /* Additional styles can be added here */
+}
+
         .glassmorphism {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
@@ -52,13 +57,19 @@
         <div id="question" class="text-left text-5xl mb-4 "></div>
         <input id="answer" type="text" class="text-input w-full py-2 mb-4" placeholder="Your Answer">
         <div id="suggestions" class="text-sm text-gray-500 flex gap-3"></div>
+        <div id = "f-cont" class = "flex flex-wrap gap-3 my-3">
+        </div>
         <div class="flex justify-between mt-8">
             <button id="prevBtn" class="px-4 py-2 bg-gray-300 rounded-md" disabled>Previous</button>
             <button id="nextBtn" class="px-4 py-2 bg-blue-500 text-white rounded-md">Next</button>
         </div>
+    
+
     </div>
     <div id="loader" class="loader hidden"></div>
         <div id = "imageContainer"></div>
+
+
     <script>
         // Questions and suggestions array
         const questions = [
@@ -112,11 +123,7 @@
     //     question: "What type of makeup is applied?",
     //     suggestions: ["Natural", "Bold", "Subtle"]
     // },
-    {
-        tag: "headshape",
-        question: "Describe the head shape:",
-        suggestions: ["Round", "Square", "Oval"]
-    },
+ 
     {
         tag: "nosesize",
         question: "How would you describe the nose size?",
@@ -143,6 +150,21 @@
         suggestions: ["Big", "Medium", "Small", "Very Small"]
     },
     {
+        tag: "cheeks",
+        question: "How would you describe the cheeks",
+        suggestions: ["Big", "Medium", "Small", "Very Small"]
+    },
+    {
+        tag: "face_shape",
+        question: "How would you describe the face shape ? ",
+        suggestions: ["sharp" , "round" , "triangular" , "rectangular"]
+    },
+    {
+        tag: "forehead",
+        question: "How would you describe the forehead?",
+        suggestions: ["Big", "Medium", "Small", "Very Small"]
+    },
+    {
         tag: "additionalfeatures",
         question: "Any other additional features?",
         suggestions: ["Specify any other features..."]
@@ -157,6 +179,36 @@
 
         // Initialize index
         let currentIndex = 0;
+
+   let  selectedId = "-11";
+const selectIt = (idx) =>{
+    renderFeatures();
+
+//     try{
+//     // document.getElementById(selectedId).style.backgroundColor = "pink";
+//     document.getElementById(selectedId).style.backgroundColor= '#4a5568';
+//     console.log("cjan")
+
+    
+//     }
+//    catch(e) {console.log(e)}
+//     console.log("selected" , idx)
+//     // currentIndex = ;
+//     document.getElementById(idx).style.backgroundColor= "#4299e1";
+    selectedId = idx;
+    console.log(document.getElementById(idx).classList)
+    goToPage(questions.map(m=>m.tag).indexOf(idx));
+}
+
+        function renderFeatures(){
+
+
+ document.getElementById("f-cont").innerHTML =  Object.keys(userAnswers).map(m=>` <button id = ${m}  class = "  px-4 py-2 ${ selectedId == m ? "bg-blue-200" : "bg-gray-200"} text-gray-700 rounded-md  ${ selectedId == m ? " hover:bg-blue-300   " : " hover:bg-gray-300"} w-max rounded-l-2xl rounded-r-2xl "  onclick = "selectIt('${m}')"><b> ${ m.charAt(0).toUpperCase() +
+        m.slice(1)}:</b>${userAnswers[m] ? userAnswers[m] : "<i >Unset</i>"}</button> `).join(" ");
+
+
+        }
+
 
         // Function to display question and suggestions
         function displayQuestion(index) {
@@ -179,14 +231,19 @@
         function nextQuestion() {
             const answer = document.getElementById('answer').value.trim();
             userAnswers[`${questions[currentIndex].tag}`] = answer;
+           
             currentIndex++;
+         
             if (currentIndex < questions.length) {
                 displayQuestion(currentIndex);
-                document.getElementById('answer').value = '';
+                   selectedId = questions[currentIndex].tag
+            renderFeatures();
+                document.getElementById('answer').value = userAnswers[`${questions[currentIndex].tag}`]|| "";
                 document.getElementById('prevBtn').disabled = false;
             } else {
                 // All questions answered, make API call
                 makeAPICall(userAnswers);
+                currentIndex--;
             }
         }
 
@@ -204,11 +261,26 @@
     }, 1000); // Run every 5 seconds
 }
 
+
+function goToPage(pg){
+    userAnswers[questions[currentIndex].tag] = document.getElementById('answer').value
+            currentIndex = pg;
+            displayQuestion(pg);
+            renderFeatures();
+            document.getElementById('answer').value = userAnswers[questions[currentIndex].tag] || '';
+            if (currentIndex === 0) {
+                document.getElementById('prevBtn').disabled = true;
+            }
+}
         // Function to handle previous button click
         function prevQuestion() {
+            console.log(currentIndex);
+            userAnswers[questions[currentIndex].tag] = document.getElementById('answer').value
             currentIndex--;
+            selectedId = questions[currentIndex].tag
+            renderFeatures()
             displayQuestion(currentIndex);
-            document.getElementById('answer').value = userAnswers[currentIndex] || '';
+            document.getElementById('answer').value = userAnswers[questions[currentIndex].tag] || '';
             if (currentIndex === 0) {
                 document.getElementById('prevBtn').disabled = true;
             }
@@ -238,8 +310,13 @@
                 decreaseBlurAndHideLoading();
                 setTimeout(()=>{
                     document.getElementById('imageContainer').innerHTML = "";
-                document.getElementById('imageContainer').innerHTML = `<img src="/${imageURL}" alt="Generated Image" class="mx-auto mt-10">`;
+                document.getElementById('imageContainer').innerHTML = `<img src="/${imageURL}" id ="genImg" class="mx-auto mt-10">`;
                 document.getElementById('imageContainer').classList.remove('hidden');
+                setTimeout(()=>{
+                    if(document.getElementById("genImg").width == 16)
+                document.getElementById("nextBtn").click();
+                },1000)
+           
                 },1000)
               
             })
